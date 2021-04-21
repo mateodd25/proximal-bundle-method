@@ -32,6 +32,14 @@ struct BundleMethodOutput
   termination_reason::TerminationReason
 end
 
+struct SolverState
+  current_objective::Float64
+  current_gap::Float64
+  currend_residual::Float64
+  current_solution::Vector{Float64}
+  cuts::Vector{Cut}
+end
+
 function create_cut(point::Vector{Float64}, objective_function, subgradient_section)
     subgradient = subgradient_section(point)
     return Cut(objective_function(point) - dot(point, subgradient), subgradient)
@@ -105,33 +113,44 @@ function solve_model(cuts::Vector{Cut}, point::Vector{Float64}, stepsize::Float6
   end
 end
 
+function take_step(objective_function, subgradient_map,
+                   params, step_size, cuts, current_point,
+                   current_objective, iteration_stats)
+  (new_point, interpolation_coefficients) = solve_model(
+    solver_state.cuts, solver_state.current_solution,
+    step_size,
+  )
+  new_objective = objective_function(new_point)
+  solver_state.residual = norm(new_point - solver_state.current_solution)
+  is_null = true
+
+  model_value = evaluate_model(cuts, new_point)
+  solver_state.current_gap = new_objective - model_value
+
+  if params.contraction_factor * (solver_state.current_objective - model_value) <= current_objective - new_objective
+    is_null = false
+    solver_state.current_solution = new_point
+    solver_state.current_objective = new_objective
+  end
+  solver_state.cuts = aggregate_cuts(cuts, interpolation_coefficients)
+  push!(solver_state.cuts, create_cut(new_point, objective_function, subgradient_map))
+end
+
 function solve(objective_function, subgradient_map, params, stepsize_policy, initial_point)
-  cuts = [create_cut(initial_point, objective_function, subgradient_map)]
-  current_point = initial_point
-  current_objective = objective_function(current_point)
-  iteration_stats = [IterationInformation(0, false, current_objective, Inf, Inf)]
 
+  iteration_stats = [IterationInformation(0, false, objective_function(initial_point), Inf, Inf)]
+  solver_state = SolverState(objective_function(initial_point), Inf, initial_point,
+                             [create_cut(initial_point, objective_function, subgradient_map)])
   for i in 1:params.iteration_limit
-    (new_point, interpolation_coefficients) = solve_model(
-      cuts, current_point,
-      stepsize_policy(current_objective, current_point, i)
+    take_step(
+      objective_function, subgradient_map, params,
+      stepsize_policy(solver_state.current_objective, solver_state.current_solution, i),
+      solver_state, iteration_stats,
     )
-    new_objective = objective_function(new_point)
-    new_residual = norm(new_point - current_point)
-    is_null = true
-
-    model_value = evaluate_model(cuts, new_point)
-    if params.contraction_factor * (current_objective - model_value) <= current_objective - new_objective
-      is_null = false
-      current_point = new_point
-      current_objective = objective_function(current_point)
-    end
-
     push!(iteration_stats,
-          IterationInformation(i, is_null, new_objective, new_objective - model_value, new_residual))
+          IterationInformation(i, solver_state.is_null, solver_state.current_objective,
+                               solver_state.current_gap, solver_state.current_residual))
     iteration_log(params, last(iteration_stats))
-    cuts = aggregate_cuts(cuts, interpolation_coefficients)
-    push!(cuts, create_cut(new_point, objective_function, subgradient_map))
   end
 
   return BundleMethodOutput(current_point, iteration_stats, TERMINATION_REASON_ITERATION_LIMIT)
