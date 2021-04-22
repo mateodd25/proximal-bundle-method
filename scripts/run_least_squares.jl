@@ -35,11 +35,11 @@ function create_bundle_method_parameters(;
 end
 
 function main()
-  n, m = 20, 10
-  A = randn(n, m)
+  n, m = 1000, 900
+  A = randn(n, m)/sqrt(m+n)
   x_opt = randn(m)
   b = A * x_opt
-
+  # b += 0.01 * randn(n)/sqrt(n)
   x_init = randn(m)
 
   objective = (x -> least_squares_objective(x, A, b))
@@ -48,11 +48,15 @@ function main()
   # step_size = (x, _, _) -> compute_step_size(x, 0.0, objective(x_init))
 
   params = create_bundle_method_parameters(
-    iteration_limit = 100,
+    iteration_limit = 5000,
     verbose = true,
-    printing_frequency = 1,
+    printing_frequency = 500,
   )
+  println("About to solve a random least squares problem using ideal step size.")
   ProximalBundleMethod.solve(objective, gradient, params, step_size, x_init)
+  println("\nAbout to solve a random least squares problem using adaptive parallel method.")
+  ProximalBundleMethod.solve_adaptive(
+    objective, gradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.01, 10), x_init)
 end
 
 main()
