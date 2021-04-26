@@ -11,6 +11,7 @@ struct BundleMethodParams
   contraction_factor::Float64
   verbose::Bool
   printing_frequency::Int64
+  full_memory::Bool
 end
 
 struct Cut
@@ -101,7 +102,7 @@ function iteration_log(params::BundleMethodParams, iteration_info::IterationInfo
 end
 
 function solve_model(cuts::Vector{Cut}, point::Vector{Float64}, stepsize::Float64)
-    if length(cuts) == 1
+  if length(cuts) == 1
     return point - cuts[1].gradient / stepsize, [1.0]
   elseif length(cuts) == 2
 
@@ -120,32 +121,51 @@ function solve_model(cuts::Vector{Cut}, point::Vector{Float64}, stepsize::Float6
       cuts[1].constant_term - cuts[2].constant_term + dot(grad_diff, candidate))
     return candidate - grad_diff * interpolation / stepsize, [interpolation, 1.0 - interpolation]
   else
-    # TODO Implement using CVX
-    return nothing
+    # This block of code is only called with the full-memory method.
+    x = Convex.Variable(length(cuts[1].gradient))
+    t = Convex.Variable(1)
+
+    problem = minimize(t + (stepsize/ 2) * Convex.sumsquares(x - point))
+    for cut in cuts
+      problem.constraints += t >= cut.gradient' * x + cut.constant_term
+    end
+    Convex.solve!(problem, () -> SCS.Optimizer(verbose=false), verbose=false)
+    # Convex.solve!(problem, Gurobi.Optimizer)
+    # if problem.status != 1
+    # error("The inner problem couldn't be solved to optimality.") # This should never happen.
+    # end
+    return Convex.evaluate(x), []
   end
 end
 
 function take_step(objective_function, subgradient_map,
                    params, step_size, solver_state,
                    iteration_stats)
-    (new_point, interpolation_coefficients) = solve_model(
-        solver_state.cuts, solver_state.current_solution,
-        step_size,
-    )
-    new_objective = objective_function(new_point)
-    solver_state.current_residual = norm(new_point - solver_state.current_solution)
-    solver_state.latest_is_null = true
 
-    model_value = evaluate_model(solver_state.cuts, new_point)
-    solver_state.current_gap = new_objective - model_value
+  (new_point, interpolation_coefficients) = solve_model(
+    solver_state.cuts, solver_state.current_solution,
+    step_size,
+  )
 
-    if params.contraction_factor * (solver_state.current_objective - model_value) <= solver_state.current_objective - new_objective
-        solver_state.latest_is_null = false
-        solver_state.current_solution = new_point
-        solver_state.current_objective = new_objective
+  new_objective = objective_function(new_point)
+  solver_state.current_residual = norm(new_point - solver_state.current_solution)
+  solver_state.latest_is_null = true
+
+  model_value = evaluate_model(solver_state.cuts, new_point)
+  solver_state.current_gap = new_objective - model_value
+
+  if params.contraction_factor * (solver_state.current_objective - model_value) <= solver_state.current_objective - new_objective
+    solver_state.latest_is_null = false
+    solver_state.current_solution = new_point
+    solver_state.current_objective = new_objective
   end
+
+  if !params.full_memory
+    # This combines all the previous cuts into one, while mainteining the constrains
+    # for the theory to hold.
     solver_state.cuts = aggregate_cuts(solver_state.cuts, interpolation_coefficients)
-    push!(solver_state.cuts, create_cut(new_point, objective_function, subgradient_map))
+  end
+  push!(solver_state.cuts, create_cut(new_point, objective_function, subgradient_map))
 end
 
 function solve(objective_function, subgradient_map, params, stepsize_policy, initial_point)
@@ -169,7 +189,8 @@ function solve(objective_function, subgradient_map, params, stepsize_policy, ini
     iteration_log(params, last(iteration_stats))
   end
 
-    return BundleMethodOutput(solver_state.current_solution, iteration_stats, TERMINATION_REASON_ITERATION_LIMIT)
+  return BundleMethodOutput(solver_state.current_solution,
+                            iteration_stats, TERMINATION_REASON_ITERATION_LIMIT)
 end
 
 function combine_parallel_models(objective_function, subgradient_map, solver_states)
@@ -213,5 +234,6 @@ function solve_adaptive(objective_function, subgradient_map, params,
     iteration_log(params, last(iteration_stats))
   end
 
-  return BundleMethodOutput(solver_states[idx].current_solution, iteration_stats, TERMINATION_REASON_ITERATION_LIMIT)
+  return BundleMethodOutput(solver_states[idx].current_solution,
+                            iteration_stats, TERMINATION_REASON_ITERATION_LIMIT)
 end
