@@ -1,6 +1,7 @@
 import ProximalBundleMethod
 import LinearAlgebra
 include("utils.jl")
+include("csv_exporter.jl")
 
 function least_squares_objective(x, A, b)
   err = A*x-b
@@ -31,11 +32,13 @@ function main()
     printing_frequency = 50,
     full_memory = false,
   )
-  println("About to solve a random least squares problem using ideal step size.")
-  ProximalBundleMethod.solve(objective, gradient, params, step_size, x_init)
-  println("\nAbout to solve a random least squares problem using adaptive parallel method.")
-  ProximalBundleMethod.solve_adaptive(
-    objective, gradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.0001, 12), x_init)
+    step_sizes = [0.5 * 2^j for j 0:12]
+    println("About to solve a random least squares problem using ideal step size.")
+    ProximalBundleMethod.solve(objective, gradient, params, step_size, x_init)
+    println("\nAbout to solve a random least squares problem using adaptive parallel method.")
+    sol, iter_info_agents = ProximalBundleMethod.solve_adaptive(
+        objective, gradient, params, step_sizes, x_init)
+    export_losses_dataframe(iter_info_agents, "/tmp/results.csv")
 end
 
 main()

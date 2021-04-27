@@ -4,11 +4,13 @@ import Convex
 import SCS
 using LinearAlgebra
 using SparseArrays
+
 include("utils.jl")
+include("csv_exporter.jl")
 
 function lasso_objective(x, A, b, reg_coeff)
   err = A*x-b
-  return 1/2 * norm(err) + reg_coeff * norm(x, 1)
+    return 1/2 * norm(err)^2 + reg_coeff * norm(x, 1)
 end
 
 function lasso_subgradient(x, A, b, reg_coeff)
@@ -75,9 +77,10 @@ function main()
   # println("\nAbout to solve a random least squares problem using ideal step size.")
   # ProximalBundleMethod.solve(objective, subgradient, params, step_size, x_init)
   println("\nAbout to solve a random lasso problem using adaptive parallel method full memory.")
-  sol = ProximalBundleMethod.solve_adaptive(
-    objective, subgradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.001, 20), x_init)
-  println(norm(sol.solution-x_opt)/norm(x_opt))
+    sol, iter_info = ProximalBundleMethod.solve_adaptive(
+        objective, subgradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.001, 20), x_init)
+    println(norm(sol.solution-x_opt)/norm(x_opt))
+
 end
 
 main()

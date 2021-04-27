@@ -4,7 +4,7 @@ import LinearAlgebra
 import Printf
 import Convex
 import SCS
-import Gurobi
+# import Gurobi
 
 const dot = LinearAlgebra.dot
 const norm = LinearAlgebra.norm
