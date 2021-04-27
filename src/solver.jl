@@ -15,8 +15,8 @@ struct BundleMethodParams
 end
 
 struct Cut
-    constant_term::Float64
-    gradient::Vector{Float64}
+  constant_term::Float64
+  gradient::Vector{Float64}
 end
 
 struct IterationInformation
@@ -28,15 +28,6 @@ struct IterationInformation
   step_size::Float64
 end
 
-"""
-Struct encoding an interval of the form
-[left_extreme, 2^exponent * left_extreme]
-"""
-struct AdaptiveStepSizeInterval
-    left_extreme::Float64
-    exponent::Int64
-end
-
 struct BundleMethodOutput
   solution::Vector{Float64}
   iteration_stats::Vector{IterationInformation}
@@ -44,21 +35,21 @@ struct BundleMethodOutput
 end
 
 mutable struct SolverState
-    current_objective::Float64
-    current_gap::Float64
-    current_residual::Float64
-    latest_is_null::Bool
-    current_solution::Vector{Float64}
-    cuts::Vector{Cut}
+  current_objective::Float64
+  current_gap::Float64
+  current_residual::Float64
+  latest_is_null::Bool
+  current_solution::Vector{Float64}
+  cuts::Vector{Cut}
 end
 
 function create_cut(point::Vector{Float64}, objective_function, subgradient_section)
-    subgradient = subgradient_section(point)
-    return Cut(objective_function(point) - dot(point, subgradient), subgradient)
+  subgradient = subgradient_section(point)
+  return Cut(objective_function(point) - dot(point, subgradient), subgradient)
 end
 
 function evaluate_cut(cut::Cut, point::Vector{Float64})
-    return cut.constant_term + dot(cut.gradient, point)
+  return cut.constant_term + dot(cut.gradient, point)
 end
 
 function evaluate_model(cuts::Vector{Cut}, point::Vector{Float64})
@@ -197,11 +188,11 @@ function combine_parallel_models(objective_function, subgradient_map, solver_sta
   min_fun, idx = findmin([state.current_objective for state in solver_states])
   new_solution = solver_states[idx].current_solution
   for state in solver_states
-      if !state.latest_is_null && min_fun < state.current_objective
-          state.current_residual = norm(state.current_solution - new_solution)
-          state.current_solution = new_solution
-          state.current_objective = objective_function(new_solution)
-          state.cuts = [create_cut(new_solution, objective_function, subgradient_map)]
+    if !state.latest_is_null && min_fun < state.current_objective
+      state.current_residual = norm(state.current_solution - new_solution)
+      state.current_solution = new_solution
+      state.current_objective = objective_function(new_solution)
+      state.cuts = [create_cut(new_solution, objective_function, subgradient_map)]
     end
   end
   return idx
@@ -209,39 +200,39 @@ end
 
 function solve_adaptive(objective_function, subgradient_map, params,
                         step_sizes, initial_point)
-    iteration_stats = [IterationInformation(0, false, objective_function(initial_point), Inf, Inf, 0.0)]
-    iteration_info_agents = [[IterationInformation(0, false, objective_function(initial_point), Inf, Inf, 0.0)]
-                             for j in 0:step_size_interval.exponent]
-    solver_states = [
-        SolverState(
-            objective_function(initial_point), Inf, Inf, false, initial_point,
-            [create_cut(initial_point, objective_function, subgradient_map)])
-        for j in 1:(step_size_interval.exponent + 1)
-    ]
-    idx = 0
-    for i in 1:params.iteration_limit
-        for j in 1:length(step_sizes)
-            take_step(
-                objective_function, subgradient_map, params,
-                step_sizes[j],
-                solver_states[j], iteration_stats,
-            )
-        end
-        idx = combine_parallel_models(objective_function, subgradient_map, solver_states)
-        for idx in 1:(step_size_interval.exponent + 1)
-            push!(iteration_info_agents[idx],
-                  IterationInformation(i, solver_states[idx].latest_is_null,
-                                       solver_states[idx].current_objective,
-                                       solver_states[idx].current_gap,
-                                       solver_states[idx].current_residual,
-                                       step_sizes[idx],))
-        end
+  iteration_stats = [IterationInformation(0, false, objective_function(initial_point), Inf, Inf, 0.0)]
+  iteration_info_agents = [[IterationInformation(0, false, objective_function(initial_point), Inf, Inf, 0.0)]
+                           for _ in step_sizes]
+  solver_states = [
+    SolverState(
+      objective_function(initial_point), Inf, Inf, false, initial_point,
+      [create_cut(initial_point, objective_function, subgradient_map)])
+    for _ in step_sizes
+  ]
+  idx = 0
+  for i in 1:params.iteration_limit
+    for j in 1:length(step_sizes)
+      take_step(
+        objective_function, subgradient_map, params,
+        step_sizes[j],
+        solver_states[j], iteration_stats,
+      )
+    end
+    idx = combine_parallel_models(objective_function, subgradient_map, solver_states)
+    for idx in 1:length(step_sizes)
+      push!(iteration_info_agents[idx],
+            IterationInformation(i, solver_states[idx].latest_is_null,
+                                 solver_states[idx].current_objective,
+                                 solver_states[idx].current_gap,
+                                 solver_states[idx].current_residual,
+                                 step_sizes[idx],))
+    end
 
-        push!(iteration_stats,
-              IterationInformation(i, solver_states[idx].latest_is_null, solver_states[idx].current_objective,
-                                   solver_states[idx].current_gap, solver_states[idx].current_residual,
-                                   step_sizes[idx]))
-        iteration_log(params, last(iteration_stats))
+    push!(iteration_stats,
+          IterationInformation(i, solver_states[idx].latest_is_null, solver_states[idx].current_objective,
+                               solver_states[idx].current_gap, solver_states[idx].current_residual,
+                               step_sizes[idx]))
+    iteration_log(params, last(iteration_stats))
   end
 
   return BundleMethodOutput(solver_states[idx].current_solution,

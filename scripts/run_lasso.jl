@@ -63,9 +63,10 @@ function main()
   )
   # println("\nAbout to solve a random least squares problem using ideal step size.")
   # ProximalBundleMethod.solve(objective, subgradient, params, step_size, x_init)
+  step_sizes = [.001 * 2^j for j in 0:19]
   println("\nAbout to solve a random lasso problem using adaptive parallel method short memory.")
   sol = ProximalBundleMethod.solve_adaptive(
-    objective, subgradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.001, 20), x_init)
+    objective, subgradient, params, step_sizes, x_init)
   println(norm(sol.solution-x_opt)/norm(x_opt))
 
   params = create_bundle_method_parameters(
@@ -78,8 +79,8 @@ function main()
   # ProximalBundleMethod.solve(objective, subgradient, params, step_size, x_init)
   println("\nAbout to solve a random lasso problem using adaptive parallel method full memory.")
     sol, iter_info = ProximalBundleMethod.solve_adaptive(
-        objective, subgradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.001, 20), x_init)
-    println(norm(sol.solution-x_opt)/norm(x_opt))
+      objective, subgradient, params, step_sizes, x_init)
+  println(norm(sol.solution-x_opt)/norm(x_opt))
 
 end
 

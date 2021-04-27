@@ -47,55 +47,57 @@ function compute_minimum_with_cvx(quadratics::Vector{Quadratic})
 end
 
 function main()
-    d = 1000
-    k = 10
+  d = 100
+  k = 10
 
-    quadratics = Quadratic[]
-    for i in 1:k
+  quadratics = Quadratic[]
+  for i in 1:k
     Q = randn(d, d)/sqrt(d)
     Q = Q' * Q
     push!(quadratics, Quadratic(randn(), randn(d), Q))
   end
 
-    # println("Solving with Convex.jl first")
-    # problem = compute_minimum_with_cvx(quadratics)
-    # Printf.@printf(
-    #   "Obj=%12g\n",
-    #   problem.optval,
-    # )
+  # println("Solving with Convex.jl first")
+  # problem = compute_minimum_with_cvx(quadratics)
+  # Printf.@printf(
+  #   "Obj=%12g\n",
+  #   problem.optval,
+  # )
 
-    x_init = randn(d)
+  x_init = randn(d)
 
-    objective = (x -> maximum_quadratic_objective(x, quadratics))
-    gradient = (x -> maximum_quadratic_gradient(x, quadratics))
-    # step_size = (x, y, _) -> compute_ideal_step_size(x, y, 0.0, x_opt)
-    # step_size = (x, _, _) -> compute_step_size(x, 0.0, objective(x_init))
+  objective = (x -> maximum_quadratic_objective(x, quadratics))
+  gradient = (x -> maximum_quadratic_gradient(x, quadratics))
+  # step_size = (x, y, _) -> compute_ideal_step_size(x, y, 0.0, x_opt)
+  # step_size = (x, _, _) -> compute_step_size(x, 0.0, objective(x_init))
 
-    # params = create_bundle_method_parameters(
-    # iteration_limit = 100000,
-    # verbose = true,
-    # printing_frequency = 1000,
-    # )
-    params = create_bundle_method_parameters(
-        iteration_limit = 3000,
-        verbose = true,
-        printing_frequency = 100,
-        # full_memory = true,
-    )
-    # println("About to solve a random least squares problem using ideal step size.")
-    # ProximalBundleMethod.solve(objective, gradient, params, step_size, x_init)
-    println("\nAbout to solve a random maximum of quadratics using adaptive parallel method with short memory.")
-    ProximalBundleMethod.solve_adaptive(
-        objective, gradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.000001, 16), x_init)
-    #     params = create_bundle_method_parameters(
-    #         iteration_limit = 1000,
-    #         verbose = true,
-    #         printing_frequency = 100,
-    #         full_memory = true,
-    #     )
-    #     println("\nAbout to solve a random maximum of quadratics using adaptive parallel method with full memory.")
-    #     ProximalBundleMethod.solve_adaptive(
-    #         objective, gradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.000001, 16), x_init)
+  # params = create_bundle_method_parameters(
+  # iteration_limit = 100000,
+  # verbose = true,
+  # printing_frequency = 1000,
+  # )
+
+  step_sizes = [.000001 * 2^j for j in 0:15]
+  params = create_bundle_method_parameters(
+    iteration_limit = 3000,
+    verbose = true,
+    printing_frequency = 100,
+    # full_memory = true,
+  )
+  # println("About to solve a random least squares problem using ideal step size.")
+  # ProximalBundleMethod.solve(objective, gradient, params, step_size, x_init)
+  println("\nAbout to solve a random maximum of quadratics using adaptive parallel method with short memory.")
+  ProximalBundleMethod.solve_adaptive(
+    objective, gradient, params, step_sizes, x_init)
+  #     params = create_bundle_method_parameters(
+  #         iteration_limit = 1000,
+  #         verbose = true,
+  #         printing_frequency = 100,
+  #         full_memory = true,
+  #     )
+  #     println("\nAbout to solve a random maximum of quadratics using adaptive parallel method with full memory.")
+  #     ProximalBundleMethod.solve_adaptive(
+  #         objective, gradient, params, ProximalBundleMethod.AdaptiveStepSizeInterval(.000001, 16), x_init)
 end
 
 main()
