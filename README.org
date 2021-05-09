@@ -1,0 +1,44 @@
+* Proximal Bundle Method
+
+This repository is a supplement for "Optimal Convergence Rates for the Proximal Bundle Method".
+
+** One-time setup
+
+*The instructions assume that your current working directory is the base of this repository.*
+
+The repository is completely written in Julia. To set the environment install Julia 1.6.1 from https://julialang.org/downloads/ and make sure =julia= is available in your =PATH=.
+
+Instantiate the Julia packages
+#+begin_src bash
+$ julia --project=. -e "import Pkg; Pkg.instantiate()"
+#+end_src
+
+Besides Julia, you need to download the data used for the experiments. For this run.
+
+#+begin_src bash
+$ ./scripts/download_data.sh
+#+end_src
+
+The SVM example computes the true minimum value using [[https://www.gurobi.com/downloads/gurobi-optimizer-eula/][Gurobi]] or SCS. To run it with Gurobi you will need to get a license.
+
+** Running
+
+*** Regression example
+
+Run
+#+begin_src bash
+$ julia --project=scripts scripts/run_regression_experiment.jl
+#+end_src
+
+This saves the results in the folder =results/regression=.
+
+*** Support vector machine example
+
+Run
+#+begin_src bash
+$ julia --project=scripts scripts/run_svm_experiment.jl --use-gurobi=true
+#+end_src
+
+If you don't want to use Gurobi you might set the flag to false.
+
+The script saves the results in the folder =results/svm=.
