@@ -6,7 +6,7 @@ This repository is a supplement for "Optimal Convergence Rates for the Proximal 
 
 *The instructions assume that your current working directory is the base of this repository.*
 
-The repository is completely written in Julia. To set the environment install Julia 1.6.1 from https://julialang.org/downloads/ and make sure =julia= is available in your =PATH=.
+The repository is completely written in Julia. To set the environment install Julia 1.6.1 from https://julialang.org/downloads/ and make sure =julia= is available in your =PATH=. The SVM example computes the true minimum value using [[https://www.gurobi.com/downloads/gurobi-optimizer-eula/][Gurobi]]. To run it you will need to install Gurobi and have an active license.
 
 Instantiate the Julia packages
 #+begin_src bash
@@ -19,7 +19,6 @@ Besides Julia, you need to download the data used for the experiments. For this 
 $ ./scripts/download_data.sh
 #+end_src
 
-The SVM example computes the true minimum value using [[https://www.gurobi.com/downloads/gurobi-optimizer-eula/][Gurobi]] or SCS. To run it with Gurobi you will need to get a license.
 
 ** Running
 
@@ -36,9 +35,12 @@ This saves the results in the folder =results/regression=.
 
 Run
 #+begin_src bash
-$ julia --project=scripts scripts/run_svm_experiment.jl --use-gurobi=true
+$ julia --project=scripts scripts/run_svm_experiment.jl
 #+end_src
 
-If you don't want to use Gurobi you might set the flag to false.
-
 The script saves the results in the folder =results/svm=.
+
+
+** Note
+
+The file structure and README of this repository were inspired by those of [[https://github.com/google-research/FirstOrderLp.jl][FirstOrderLp]].
