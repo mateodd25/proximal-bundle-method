@@ -6,7 +6,9 @@ This repository is a supplement for "Optimal Convergence Rates for the Proximal 
 
 *The instructions assume that your current working directory is the base of this repository.*
 
-The repository is completely written in Julia. To set the environment install Julia 1.6.1 from https://julialang.org/downloads/ and make sure =julia= is available in your =PATH=. The SVM example computes the true minimum value using [[https://www.gurobi.com/downloads/gurobi-optimizer-eula/][Gurobi]]. To run it you will need to install Gurobi and have an active license.
+The code in this repository is written in Julia. To set the environment install Julia 1.6.1 from https://julialang.org/downloads/ and make sure =julia= is available in your =PATH=.
+
+The SVM example (below) computes the true minimum value using [[https://www.gurobi.com/downloads/gurobi-optimizer-eula/][Gurobi]]. To run it you will need to install Gurobi and have an active license.
 
 Instantiate the Julia packages
 #+begin_src
