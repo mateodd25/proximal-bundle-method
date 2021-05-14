@@ -122,12 +122,12 @@ end
 function main()
     Random.seed!(2625)
     instance_names = ["colon-cancer", "duke", "leu"]
-  coefficients = [0.001, 0.01, 0.1, 0.5, 1.0, 1.5, 2.0, 10.0]
+    coefficients = [0.001, 0.01, 0.1, 0.5, 1.0, 1.5, 2.0, 10.0]
 
-  step_sizes = [1e-15 * 100^j for j = 0:10]
+    step_sizes = [1e-15 * 100^j for j = 0:10]
 
-  instances = Dict()
-  for name in instance_names
+    instances = Dict()
+    for name in instance_names
         instances[name] = preprocess_learning_data(load_libsvm_file("data/" * name))
     end
 
@@ -195,45 +195,45 @@ function main()
                 ],
             )
 
-          # Uncomment this block of code if you want to save stats about each run.
+            # Uncomment this block of code if you want to save stats about each run.
 
-          # csv_path_sol =
-          #     "results/svm/results_subgradient_" * name * "_" * string(coeff) * "_svm.csv"
-          # output_stepsize_plot =
-          #     "results/svm/results_subgradient_" * name * "_" *
-          #     string(coeff) *
-          #     "_stepsize_svm.pdf"
-          # output_objective_plot =
-          #     "results/svm/results_subgradient_" * name * "_" *
-          #     string(coeff) *
-          #     "_objective_svm.pdf"
+            # csv_path_sol =
+            #     "results/svm/results_subgradient_" * name * "_" * string(coeff) * "_svm.csv"
+            # output_stepsize_plot =
+            #     "results/svm/results_subgradient_" * name * "_" *
+            #     string(coeff) *
+            #     "_stepsize_svm.pdf"
+            # output_objective_plot =
+            #     "results/svm/results_subgradient_" * name * "_" *
+            #     string(coeff) *
+            #     "_objective_svm.pdf"
 
-          # export_statistics(sol_subgradient, csv_path_sol)
-          # plot_step_sizes(csv_path_sol, output_stepsize_plot)
-          # plot_objective(csv_path_sol, output_objective_plot)
+            # export_statistics(sol_subgradient, csv_path_sol)
+            # plot_step_sizes(csv_path_sol, output_stepsize_plot)
+            # plot_objective(csv_path_sol, output_objective_plot)
 
-          # csv_path_sol =
-          #     "results/svm/results_bundle_" * name * "_" * string(coeff) * "_svm.csv"
-          # output_stepsize_plot =
-          #     "results/svm/results_bundle_" * name * "_" *
-          #     string(coeff) *
-          #     "_stepsize_svm.pdf"
-          # output_objective_plot =
-          #     "results/svm/results_bundle_" * name * "_" *
-          #     string(coeff) *
-          #     "_objective_svm.pdf"
+            # csv_path_sol =
+            #     "results/svm/results_bundle_" * name * "_" * string(coeff) * "_svm.csv"
+            # output_stepsize_plot =
+            #     "results/svm/results_bundle_" * name * "_" *
+            #     string(coeff) *
+            #     "_stepsize_svm.pdf"
+            # output_objective_plot =
+            #     "results/svm/results_bundle_" * name * "_" *
+            #     string(coeff) *
+            #     "_objective_svm.pdf"
 
-          # csv_path =
-          #     "results/svm/results_" * name * "_" * string(coeff) * "_agents_svm.csv"
-          # output_path =
-          #     "results/svm/results_" * name * "_" * string(coeff) * "_agents_svm.pdf"
+            # csv_path =
+            #     "results/svm/results_" * name * "_" * string(coeff) * "_agents_svm.csv"
+            # output_path =
+            #     "results/svm/results_" * name * "_" * string(coeff) * "_agents_svm.pdf"
 
-          # export_statistics(sol_bundle, csv_path_sol)
-          # plot_step_sizes(csv_path_sol, output_stepsize_plot)
-          # plot_objective(csv_path_sol, output_objective_plot)
+            # export_statistics(sol_bundle, csv_path_sol)
+            # plot_step_sizes(csv_path_sol, output_stepsize_plot)
+            # plot_objective(csv_path_sol, output_objective_plot)
 
-          # export_losses_agents(iter_info_agents, step_sizes, csv_path)
-          # plot_agent_losses(csv_path, output_path)
+            # export_losses_agents(iter_info_agents, step_sizes, csv_path)
+            # plot_agent_losses(csv_path, output_path)
 
         end
     end
