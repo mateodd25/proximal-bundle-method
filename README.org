@@ -37,8 +37,14 @@ Run
 #+begin_src
 $ julia --project=scripts scripts/run_svm_experiment.jl
 #+end_src
+*Warning*: This script might take a long time to finish.
 
-The script saves the results in the folder =results/svm=.
+To generate plots run
+#+begin_src
+$ julia --project=scripts scripts/process_svm_plots.jl
+#+end_src
+
+These scripts save the results in the folder =results/svm=.
 
 ** Auto-formatting Julia code
 
