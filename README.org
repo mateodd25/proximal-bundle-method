@@ -1,6 +1,6 @@
 * Proximal Bundle Method
 
-This repository is a supplement for "Optimal Convergence Rates for the Proximal Bundle Method".
+This repository is a supplement for "Optimal Convergence Rates for the Proximal Bundle Method". [[https://arxiv.org/abs/2105.07874][arxiv 2105.07874]]
 
 ** One-time setup
 
