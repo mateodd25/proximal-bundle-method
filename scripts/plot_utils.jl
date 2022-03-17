@@ -56,3 +56,27 @@ function plot_objective(csv_path, plot_file; lower_bound = 1.0e-15, upper_bound 
     yaxis!("Objective gap")
     savefig(plot_file)
 end
+
+function plot_objectives(losses, plot_file, labels; lower_bound = 1.0e-15, upper_bound = 1.0)
+    gr()
+    # general_setup()
+    plot()
+    if length(losses) != length(labels)
+        print("Not generating plots for "+string(losses)+". The number of labels and paths do not match.")
+        return
+    end
+    colors = vcat([1,2], 4:(length(labels) + 2)) # Colorblind friendly palette
+    for (i, loss) in enumerate(losses)
+        plot!(
+            loss,
+            yaxis = (:log10, [lower_bound, upper_bound]),
+            line = (3),
+            color = colors[i],
+            label = labels[i],
+            legend = :bottomright,
+        )
+    end
+    xaxis!("Oracle calls")
+    yaxis!("Objective gap")
+    savefig(plot_file)
+end
